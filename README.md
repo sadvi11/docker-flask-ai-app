@@ -1,195 +1,158 @@
-# Docker Flask AI App
+# AI Chatbot — Powered by Claude API
 
-> Flask AI Spam Classifier containerised with Docker and deployed to AWS ECR via GitHub Actions CI/CD pipeline.
-
-[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)](https://python.org)
-[![Flask](https://img.shields.io/badge/Flask-REST_API-000000?logo=flask)](https://flask.palletsprojects.com)
-[![Docker](https://img.shields.io/badge/Docker-Containerised-2496ED?logo=docker)](https://docker.com)
-[![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI%2FCD-2088FF?logo=githubactions)](https://github.com/features/actions)
-[![AWS ECR](https://img.shields.io/badge/AWS-ECR-FF9900?logo=amazonaws)](https://aws.amazon.com/ecr)
-[![Status](https://img.shields.io/badge/Status-Deployed%20%26%20Verified-2ea44f)]()
+A production-ready conversational AI chatbot built with Python and Anthropic Claude API.
+Designed to answer questions about AWS cloud services, 5G network architecture, and tech career guidance.
 
 ---
 
-## What This Project Does
+## Why I built this
 
-A Flask REST API serving an AI-powered spam classification model, fully containerised
-with Docker and delivered via an automated GitHub Actions CI/CD pipeline. Every push to
-main triggers automatic linting, testing, Docker image build, and push to AWS ECR —
-zero manual deployment steps. Demonstrates the complete DevOps software delivery lifecycle
-from code commit to production-ready container in a cloud registry.
+As a Nokia 5G Packet Core Engineer transitioning into AI/Cloud Engineering, I built this project to demonstrate hands-on AI API integration skills. This chatbot connects real infrastructure knowledge with modern AI tooling — exactly what cloud and AI engineering roles require.
 
 ---
 
-## Architecture
+## What it does
 
-```
-  DEVELOPER                  GITHUB ACTIONS              AWS CLOUD
-  ──────────               ──────────────────           ───────────
-  git push                                              ┌──────────┐
-      │                    ┌──────────────┐             │  AWS ECR  │
-      └──► GitHub ────────►│  Lint Code   │             │ Registry │
-                           │  flake8      │             └────┬─────┘
-                           └──────┬───────┘                  │
-                                  │                          │
-                           ┌──────▼───────┐                  │
-                           │  Run Tests   │                  │
-                           │  pytest      │                  │
-                           └──────┬───────┘                  │
-                                  │                          │
-                           ┌──────▼───────┐                  │
-                           │ Build Docker │                  │
-                           │   Image      │                  │
-                           └──────┬───────┘                  │
-                                  │                          │
-                           ┌──────▼───────┐                  │
-                           │  Push to ECR │──────────────────┘
-                           └──────────────┘
-```
+- Answers questions about AWS services, cloud architecture, and DevOps
+- Understands 5G network and telecom infrastructure topics
+- Provides career guidance for tech roles in Canada
+- Runs as an interactive command line application
+- Handles errors gracefully with try/except blocks
+- Loads API credentials securely using environment variables
 
 ---
 
-## CI/CD Pipeline Stages
+## Technologies used
 
-| Stage | Tool | What Happens |
-|---|---|---|
-| Trigger | GitHub Actions | Fires on every push to `main` branch |
-| Lint | flake8 | Checks Python code quality and style |
-| Test | pytest | Runs automated unit tests |
-| Build | Docker | Builds container image from Dockerfile |
-| Push | AWS ECR | Pushes versioned image to private registry |
-
----
-
-## Components
-
-| Component | Technology | Purpose |
-|---|---|---|
-| Web Framework | Flask | REST API serving classification predictions |
-| ML Model | scikit-learn | Spam vs ham text classifier |
-| Container | Docker | Portable, environment-agnostic packaging |
-| CI/CD | GitHub Actions | Automated build, test, and deploy pipeline |
-| Registry | AWS ECR | Private container image storage |
-| Tests | pytest | Automated validation of model and API |
+| Technology | Purpose |
+|-----------|---------|
+| Python 3 | Core programming language |
+| Anthropic Claude API | AI language model integration |
+| claude-haiku model | Fast, cost-efficient AI responses |
+| python-dotenv | Secure API key management |
+| Environment variables | Production-grade secret handling |
 
 ---
 
-## Security Design
+## Skills demonstrated
 
-- **AWS ECR private registry** — images not publicly accessible, IAM-controlled
-- **GitHub Actions secrets** — AWS credentials stored as encrypted repository secrets, never in code
-- **Docker non-root user** — container runs as non-root for reduced attack surface
-- **Dependency scanning** — CI pipeline checks for known vulnerabilities in requirements
-
----
-
-## Key Design Decisions
-
-**Why GitHub Actions over Jenkins?**
-GitHub Actions is native to the repository — no separate CI server to manage.
-Workflow YAML lives in the repo, is version-controlled, and runs on GitHub-managed
-infrastructure. Zero maintenance overhead for a portfolio-scale project.
-
-**Why AWS ECR over Docker Hub?**
-ECR integrates natively with AWS IAM — no separate registry credentials needed when
-pulling from ECS, EKS, or EC2. Images are private by default. This is the production
-pattern used at enterprise scale.
-
-**Why containerise the ML model?**
-A model that only runs on one machine is not production-ready. Docker makes the model
-plus all its dependencies portable — runs identically on a developer laptop, a CI runner,
-and a production EC2 instance. This is the foundation of MLOps.
-
-**Why automated tests before Docker build?**
-The pipeline fails fast — if tests fail, the Docker build never runs, and no broken image
-reaches ECR. This prevents bad code from polluting the container registry.
+- AI API integration with real production model
+- Secure credential management using .env and .gitignore
+- Python error handling with try/except
+- Interactive CLI application design
+- Clean, readable, well-commented code
 
 ---
 
-## Quick Start
+## How to run it locally
 
+**Step 1 — Clone the repo:**
 ```bash
-# Clone
-git clone https://github.com/sadvi11/docker-flask-ai-app.git
-cd docker-flask-ai-app
-
-# Run locally with Docker
-docker build -t flask-ai-app .
-docker run -p 5000:5000 flask-ai-app
-
-# Or with Docker Compose
-docker-compose up
-
-# Test the API
-curl -X POST http://localhost:5000/predict \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Congratulations! You have won a free prize!"}'
+git clone https://github.com/sadvi11/ai-chatbot-claude.git
+cd ai-chatbot-claude
 ```
 
----
-
-## Repository Structure
-
-```
-docker-flask-ai-app/
-├── app/
-│   ├── app.py              # Flask REST API
-│   └── model.py            # Spam classifier model
-├── tests/
-│   └── test_app.py         # pytest test suite
-├── .github/
-│   └── workflows/
-│       └── deploy.yml      # GitHub Actions CI/CD pipeline
-├── Dockerfile              # Container build instructions
-├── docker-compose.yml      # Local development orchestration
-├── requirements.txt        # Python dependencies
-├── screenshots/            # Deployment proof
-├── WHY.md                  # Design decision documentation
-└── README.md
-```
-
----
-
-## Interview Talking Points
-
-- **CI/CD pipeline design** — what each stage does and why the order matters
-- **Docker multi-stage builds** — how to reduce image size for production
-- **GitHub Actions secrets** — how to store AWS credentials securely in pipelines
-- **AWS ECR lifecycle policies** — how to manage image retention and cost
-- **Testing in CI** — why tests must pass before build, not after
-- **Container security** — non-root users, image scanning, minimal base images
-
----
-
-## Author
-
-**Sadhvi Sharma** — Cloud & AI Engineer
-Nokia India (5G Packet Core) → Cloud & AI Engineering
-Calgary, AB, Canada | Permanent Resident | Open to Relocation
-
-[LinkedIn](https://linkedin.com/in/sadhvi-sharma-5789a6249) | [GitHub](https://github.com/sadvi11)
-
-## Testing
-
-The application includes a unit test suite covering all API endpoints and the prediction logic. Run the tests with:
-
+**Step 2 — Install dependencies:**
 ```bash
-pytest -v
+pip3 install anthropic python-dotenv
 ```
 
-Tests cover:
-- The home, health, and predict endpoints return correct responses
-- Spam messages are correctly classified as SPAM
-- Normal messages are correctly classified as HAM
-- Invalid input (missing text field) returns a 400 error
+**Step 3 — Set up your API key:**
 
-## CI/CD Pipeline
+Create a `.env` file in the project folder:
+```
+ANTHROPIC_API_KEY=your-api-key-here
+```
 
-On every push to main, GitHub Actions runs the following pipeline:
+Get your free API key at: https://console.anthropic.com
 
-1. Test - installs dependencies and runs the full pytest suite
-2. Build - builds the Docker image (only if tests pass)
-3. Scan - scans the image with Trivy for HIGH and CRITICAL vulnerabilities
-4. Push - pushes the image to Amazon ECR
+**Step 4 — Run the chatbot:**
+```bash
+python3 ai_chatbot.py
+```
 
-The build is gated on passing tests, so code that fails the test suite cannot reach the registry.
+**Step 5 — Ask anything:**
+```
+========================================
+   AI CHATBOT — powered by Claude
+   Type 'quit' to exit
+========================================
+
+You: What is the difference between AWS EC2 and Lambda?
+
+Claude: Great question! Here is the key difference...
+```
+
+---
+
+## Example questions to try
+
+```
+What is AWS Lambda and when should I use it?
+How does 5G core network architecture relate to cloud computing?
+What is the difference between DevOps and MLOps?
+What Python skills do I need for a Cloud Engineer role in Canada?
+Explain serverless architecture in simple terms
+```
+
+---
+
+## Project structure
+
+```
+ai-chatbot-claude/
+├── ai_chatbot.py       # Main chatbot application
+├── .env                # API key (not pushed to GitHub)
+├── .gitignore          # Protects secret files from GitHub
+└── README.md           # Project documentation
+```
+
+---
+
+## Security implementation
+
+This project follows production security best practices:
+
+- API keys are stored in `.env` file — never hardcoded in code
+- `.gitignore` prevents secrets from being pushed to GitHub
+- `os.environ.get()` loads credentials at runtime
+- No sensitive data exists in commit history
+
+---
+
+## What I learned
+
+- How to integrate a real AI API into a Python application
+- How to manage API credentials securely in production
+- How to build interactive CLI applications in Python
+- How to handle API errors gracefully
+- How environment variables work in real cloud applications
+
+---
+
+## Connect with me
+
+I am actively looking for AI Engineer, Cloud Engineer, and MLOps roles in Canada.
+
+- GitHub: github.com/sadvi11
+- Email: sadhvikhajuria@gmail.com
+- Certification: AWS Solutions Architect Associate
+- Background: Nokia 5G Packet Core Engineer
+
+If you are hiring or know someone who is — let's connect!
+
+---
+
+## Other projects in my portfolio
+
+| Project | Tech stack |
+|---------|-----------|
+| Spam Classifier | Python, Naive Bayes, Flask REST API |
+| Serverless File Processor | AWS Lambda, Python |
+| AWS EC2 Instance Checker | Python, boto3 |
+| AI S3 Document Analyser | Python, AWS S3, AI |
+| AI Chatbot | Python, Claude API |
+
+---
+
+*Built by Sadhvi Khajuria — Nokia 5G Engineer transitioning into AI/Cloud Engineering in Canada*
