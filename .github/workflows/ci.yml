@@ -1,0 +1,38 @@
+name: CI
+
+# Runs on every push and PR. Deliberately requires no cloud credentials, so it
+# reflects the health of the code rather than the state of an AWS account.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+
+      - name: Run tests
+        run: pytest -v
+
+      - name: Build Docker image
+        run: docker build -t spam-classifier-ai:ci .
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: spam-classifier-ai:ci
+          format: table
+          exit-code: '0'
+          severity: HIGH,CRITICAL
