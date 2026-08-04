@@ -2,12 +2,13 @@
 
 ## Real World Problem This Solves
 
-TD Bank receives 10,000 emails daily.
-RBC processes thousands of customer messages.
-Government of Canada handles millions of citizen communications.
+Any organisation handling inbound messages at volume runs into the same wall: the
+message count grows and the reviewing headcount cannot grow with it. Manual triage is
+accurate and does not scale; no triage at all is cheap and floods the people downstream.
 
-All of them have the same problem:
-How do you automatically detect spam without human review?
+The practical answer is a classifier that handles the confident majority automatically and
+escalates only what it is unsure about — so human attention goes to the ambiguous cases
+instead of the obvious ones.
 
 This project solves that with a containerized AI service.
 Any team can deploy it anywhere with one command.
@@ -25,17 +26,6 @@ With Docker:
 - Zero environment conflicts
 - Deployment takes seconds
 - Same behavior on every machine
-
-## Canadian Job Market Relevance
-
-Docker is mentioned in 80% of Canadian cloud job postings.
-Every company hiring DevOps or Cloud Engineers requires it.
-
-Target roles:
-- DevOps Engineer at Shopify, Telus, Bell
-- Cloud Engineer at TD Bank, RBC, Scotiabank
-- Platform Engineer at any Canadian tech company
-- Federal IT-02/IT-03 containerization roles
 
 ## Nokia Connection
 
