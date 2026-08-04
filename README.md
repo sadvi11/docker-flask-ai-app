@@ -168,3 +168,28 @@ Nokia India (5G Packet Core) → Cloud & AI Engineering
 Calgary, AB, Canada | Permanent Resident | Open to Relocation
 
 [LinkedIn](https://linkedin.com/in/sadhvi-sharma-5789a6249) | [GitHub](https://github.com/sadvi11)
+
+## Testing
+
+The application includes a unit test suite covering all API endpoints and the prediction logic. Run the tests with:
+
+```bash
+pytest -v
+```
+
+Tests cover:
+- The home, health, and predict endpoints return correct responses
+- Spam messages are correctly classified as SPAM
+- Normal messages are correctly classified as HAM
+- Invalid input (missing text field) returns a 400 error
+
+## CI/CD Pipeline
+
+On every push to main, GitHub Actions runs the following pipeline:
+
+1. Test - installs dependencies and runs the full pytest suite
+2. Build - builds the Docker image (only if tests pass)
+3. Scan - scans the image with Trivy for HIGH and CRITICAL vulnerabilities
+4. Push - pushes the image to Amazon ECR
+
+The build is gated on passing tests, so code that fails the test suite cannot reach the registry.
