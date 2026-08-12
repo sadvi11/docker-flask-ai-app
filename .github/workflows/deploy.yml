@@ -5,27 +5,84 @@ name: Deploy to ECR
 on:
   workflow_dispatch:
 
+# OIDC: GitHub mints a short-lived token that AWS exchanges for temporary
+# credentials. id-token: write is what allows that token to be requested.
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
+  # A job-level `if` cannot read the secrets context, so the check for a
+  # configured role happens inside a job and is published as an output.
+  check-config:
+    name: Check deploy target is configured
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - id: check
+        run: |
+          if [ -n "${{ secrets.AWS_DEPLOY_ROLE_ARN }}" ]; then
+            echo "configured=true" >> $GITHUB_OUTPUT
+          else
+            echo "configured=false" >> $GITHUB_OUTPUT
+            echo "::notice::AWS_DEPLOY_ROLE_ARN is not set. See README - deploying requires an IAM role that trusts this repository via OIDC."
+          fi
+
   build-and-push:
-    name: Build and push to ECR
+    name: Build, scan and push to ECR
+    needs: check-config
+    if: needs.check-config.outputs.configured == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      # No access key exists. GitHub presents a signed OIDC token, AWS validates
+      # it against a trust policy scoped to this repository, and returns
+      # credentials that expire. Nothing is stored, so nothing can leak.
+      - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: github-actions-ecr-push
           aws-region: ca-central-1
 
       - name: Login to Amazon ECR
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build, scan and push
+      # Build locally first so the scan runs against the exact image that will
+      # be pushed - scanning after the push would mean a vulnerable image is
+      # already in the registry by the time you learn about it.
+      - name: Build image
         env:
-          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ca-central-1.amazonaws.com
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_NAME: spam-classifier-ai
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/$IMAGE_NAME:latest .
+          docker build \
+            -t $ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$IMAGE_NAME:latest .
+
+      - name: Scan image for vulnerabilities
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ steps.login-ecr.outputs.registry }}/spam-classifier-ai:${{ github.sha }}
+          format: table
+          # The build fails on a HIGH or CRITICAL finding. A scan that only
+          # reports is a scan everyone learns to scroll past.
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+
+      - name: Push image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_NAME: spam-classifier-ai
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Both tags: the SHA is the immutable one you can roll back to,
+          # latest is a convenience pointer. Deploying `latest` alone leaves
+          # nothing to roll back to.
+          docker push $ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
           docker push $ECR_REGISTRY/$IMAGE_NAME:latest
