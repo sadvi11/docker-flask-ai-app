@@ -9,6 +9,24 @@
 
 > A Flask REST API serving a spam classifier, containerized with Docker and shipped through a GitHub Actions pipeline that runs tests before it builds, and scans every image before pushing to AWS ECR.
 
+
+## What it actually produces
+
+Real output from the [latest CI run](https://github.com/sadvi11/docker-flask-ai-app/actions).
+Tests gate the build, and the image is scanned before it can ship:
+
+```console
+============================== 5 passed in 0.98s ===============================
+
+installing Trivy binary
+Running Trivy with options: trivy image spam-classifier-ai:ci
+```
+
+**The scan exits non-zero on HIGH or CRITICAL**, so a vulnerable image fails
+the build rather than being reported and pushed anyway. A scan that only
+reports is a scan people learn to scroll past.
+
+
 ## What This Demonstrates
 
 - Machine learning served over a clean REST API
