@@ -42,34 +42,51 @@ reports is a scan people learn to scroll past.
 ### Runtime Request Flow
 
 ```mermaid
-flowchart LR
-    A[Client]:::client -->|POST /predict| B[Flask REST API]:::api
-    B --> C[Naive Bayes Model<br/>scikit-learn]:::model
-    C --> D[JSON Response<br/>SPAM or HAM + confidence]:::result
-    D --> A
+flowchart TD
+    A["Client"]
+    B["Flask REST API"]
+    C["Naive Bayes model<br/>scikit-learn"]
+    D["JSON response<br/>SPAM or HAM + confidence"]
 
-    classDef client fill:#4A90D9,stroke:#1F3864,color:#ffffff
-    classDef api fill:#5B9BD5,stroke:#1F3864,color:#ffffff
-    classDef model fill:#70AD47,stroke:#2E5A1C,color:#ffffff
-    classDef result fill:#7F7F7F,stroke:#3F3F3F,color:#ffffff
+    A -->|"POST /predict"| B --> C --> D --> A
+
+    linkStyle default stroke:#64748b,stroke-width:1.5px
+    classDef default fill:#f8fafc,stroke:#64748b,stroke-width:2px,color:#0f172a
+    classDef decide fill:#dbeafe,stroke:#1d4ed8,stroke-width:3px,color:#1e3a8a
+    classDef k8s   fill:#eef2ff,stroke:#1d4ed8,stroke-width:3px,color:#1e3a8a
+    classDef ok    fill:#dcfce7,stroke:#15803d,stroke-width:3px,color:#14532d
+    class B decide
+    class C k8s
+    class D ok
 ```
 
 ### CI/CD Delivery Pipeline
 
 ```mermaid
-flowchart LR
-    P[git push to main]:::push --> T{pytest suite}:::test
-    T -->|pass| B[Build Docker Image]:::build
-    T -->|fail| X[Pipeline Stops<br/>no image built]:::stop
-    B --> S[Trivy Scan<br/>HIGH / CRITICAL]:::scan
-    S --> E[(AWS ECR<br/>Private Registry)]:::ecr
+flowchart TD
+    P["git push to main"]
+    T{"pytest suite"}
+    B["Build Docker image"]
+    X["Pipeline stops<br/><b>no image built</b>"]
+    S["Trivy scan<br/>HIGH / CRITICAL"]
+    E[("AWS ECR<br/>private registry")]
 
-    classDef push fill:#4A90D9,stroke:#1F3864,color:#ffffff
-    classDef test fill:#2088FF,stroke:#0D47A1,color:#ffffff
-    classDef build fill:#5B9BD5,stroke:#1F3864,color:#ffffff
-    classDef stop fill:#D9534F,stroke:#8B2C29,color:#ffffff
-    classDef scan fill:#8E44AD,stroke:#5B2C6F,color:#ffffff
-    classDef ecr fill:#E69500,stroke:#8A5A00,color:#ffffff
+    P --> T
+    T -->|"pass"| B --> S --> E
+    T -->|"fail"| X
+
+    linkStyle default stroke:#64748b,stroke-width:1.5px
+    classDef default fill:#f8fafc,stroke:#64748b,stroke-width:2px,color:#0f172a
+    classDef aws   fill:#fff7ed,stroke:#c2410c,stroke-width:3px,color:#7c2d12
+    classDef ci    fill:#f5f3ff,stroke:#6d28d9,stroke-width:3px,color:#4c1d95
+    classDef decide fill:#dbeafe,stroke:#1d4ed8,stroke-width:3px,color:#1e3a8a
+    classDef stop  fill:#fee2e2,stroke:#b91c1c,stroke-width:3px,color:#7f1d1d
+    classDef warn  fill:#fef3c7,stroke:#b45309,stroke-width:3px,color:#78350f
+    class T decide
+    class X stop
+    class S warn
+    class E aws
+    class B ci
 ```
 
 The key design decision: build depends on test. If a single test fails, the Docker image is never built and never reaches ECR.
